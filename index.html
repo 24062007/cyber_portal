@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defence Cyber Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.hidden{display:none;}
+.drag-area{border:2px dashed #1E3A8A;padding:20px;text-align:center;border-radius:12px;cursor:pointer;}
+.chatbot{position:fixed;bottom:20px;right:20px;width:300px;max-height:400px;background:white;border-radius:12px;box-shadow:0 4px 8px rgba(0,0,0,0.3);display:none;flex-direction:column;}
+.chat-header{background:#1E3A8A;color:white;padding:10px;border-top-left-radius:12px;border-top-right-radius:12px;}
+.chat-messages{flex:1;padding:10px;overflow-y:auto;}
+.chat-input{display:flex;border-top:1px solid #ddd;}
+.chat-input input{flex:1;border:none;padding:8px;}
+.chat-input button{background:#1E3A8A;color:white;padding:8px;border:none;}
+.popup{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:999;}
+.popup-content{background:white;padding:20px;border-radius:10px;text-align:center;max-width:400px;}
+</style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+<!-- Navbar -->
+<header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md">
+  <h1 class="text-xl font-bold">Defence Cyber Portal</h1>
+  <div class="flex space-x-4 items-center">
+    <select id="langSelect" onchange="changeLang()" class="p-1 rounded text-black">
+      <option value="en">English</option>
+      <option value="mr">Marathi</option>
+      <option value="hi">Hindi</option>
+    </select>
+    <button onclick="showPage('loginPage')" class="hover:text-yellow-300">Login</button>
+    <button onclick="showPage('reportPage')" class="hover:text-yellow-300">Report</button>
+    <button onclick="showPage('dashboardPage')" class="hover:text-yellow-300">CERT Dashboard</button>
+    <button onclick="showPage('infoPage')" class="hover:text-yellow-300">Instructions</button>
+    <button onclick="showPage('profilePage')" class="hover:text-yellow-300">My Profile</button>
+  </div>
+</header>
+
+<!-- Login Page -->
+<section id="loginPage" class="page p-8">
+  <div class="bg-white p-10 rounded-xl shadow-xl max-w-md mx-auto mt-10 text-center">
+    <h2 class="text-2xl font-semibold mb-4">Sign in with Google</h2>
+    <button onclick="googleLogin()" class="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded w-full">🔒 Sign in with Google</button>
+  </div>
+</section>
+
+<!-- Fraud Detection Permission -->
+<div id="permissionPopup" class="popup hidden">
+  <div class="popup-content">
+    <h3 class="text-lg font-bold mb-3">⚠️ Fraud Detection Permission</h3>
+    <p>Allow this site to analyze messages & detect fraud attempts in real time?</p>
+    <div class="mt-4 flex justify-around">
+      <button onclick="allowPermission()" class="bg-green-600 text-white px-4 py-2 rounded">Allow</button>
+      <button onclick="denyPermission()" class="bg-red-600 text-white px-4 py-2 rounded">Deny</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Page -->
+<section id="reportPage" class="page hidden p-8">
+  <h2 class="text-3xl font-bold mb-6 text-center">Submit Cyber Incident</h2>
+  <div class="bg-white p-6 rounded-xl shadow-lg max-w-xl mx-auto">
+    <label class="block font-semibold mb-2">Incident Type:</label>
+    <select id="incidentType" class="border p-3 mb-4 w-full rounded">
+      <option>Phishing</option>
+      <option>Malware</option>
+      <option>Fraud</option>
+      <option>Espionage Indicator</option>
+    </select>
+    <label class="block font-semibold mb-2">Message/Email Content:</label>
+    <textarea id="incidentDesc" rows="5" class="border p-3 mb-4 w-full rounded" placeholder="Paste message or email..."></textarea>
+    <div id="fraudResult" class="text-red-600 font-semibold mb-3"></div>
+    <button onclick="detectFraud()" class="bg-blue-700 text-white px-4 py-3 rounded w-full hover:bg-blue-800">Analyze Message</button>
+    <button onclick="submitReport()" class="bg-green-600 mt-4 text-white px-4 py-3 rounded w-full hover:bg-green-700">Submit Report</button>
+  </div>
+</section>
+
+<!-- Dashboard -->
+<section id="dashboardPage" class="page hidden p-8">
+  <h2 class="text-3xl font-bold mb-6 text-center">CERT Dashboard</h2>
+  <table class="w-full border-collapse bg-white rounded-xl shadow-lg">
+    <thead class="bg-blue-900 text-white">
+      <tr><th class="p-3">ID</th><th class="p-3">Type</th><th class="p-3">Status</th><th class="p-3">Date</th></tr>
+    </thead>
+    <tbody id="certData"><tr><td class="p-3">1</td><td>Phishing</td><td>Under Review</td><td>15 Oct 2025</td></tr></tbody>
+  </table>
+</section>
+
+<!-- Instructions Page -->
+<section id="infoPage" class="page hidden p-8">
+  <h2 class="text-3xl font-bold mb-6 text-center">Cyber Crime Awareness</h2>
+  <div class="bg-white p-6 rounded-xl shadow-lg max-w-3xl mx-auto">
+    <ul class="list-disc pl-6">
+      <li>Never share OTP or passwords with anyone.</li>
+      <li>Beware of unknown links or job offers.</li>
+      <li>Always verify sender email ID before clicking attachments.</li>
+      <li>Use strong passwords & 2FA for important accounts.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Profile Page -->
+<section id="profilePage" class="page hidden p-8">
+  <h2 class="text-3xl font-bold mb-6 text-center">My Profile</h2>
+  <div class="bg-white p-6 rounded-xl shadow-lg max-w-md mx-auto">
+    <p><strong>Name:</strong> <span id="profileName">Guest</span></p>
+    <p><strong>Role:</strong> User</p>
+    <label class="block mt-4 font-semibold">Contact Number:</label>
+    <input type="text" id="profileContact" placeholder="Add Number" class="border p-2 rounded w-full mb-3">
+    <button onclick="saveProfile()" class="bg-blue-700 text-white px-4 py-2 rounded w-full hover:bg-blue-800">Save</button>
+  </div>
+</section>
+
+<!-- AI Chatbot -->
+<div id="chatbotBtn" class="fixed bottom-5 right-5 bg-blue-900 text-white p-3 rounded-full cursor-pointer hover:bg-blue-700" onclick="toggleChatbot()">💬</div>
+<div id="chatbot" class="chatbot flex flex-col">
+  <div class="chat-header">AI Cyber Assistant</div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Type message...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+let currentLang='en';
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+// Google Login (Offline Sim)
+function googleLogin(){
+  alert("Google Login Successful (Offline Simulation)");
+  document.getElementById('permissionPopup').classList.remove('hidden');
+}
+
+// Fraud Detection Permission
+function allowPermission(){
+  document.getElementById('permissionPopup').classList.add('hidden');
+  alert("Fraud detection activated ✅");
+  showPage('reportPage');
+}
+function denyPermission(){
+  document.getElementById('permissionPopup').classList.add('hidden');
+  alert("Fraud detection disabled ⚠️");
+  showPage('reportPage');
+}
+
+// Fraud Detection (Offline AI simulation)
+function detectFraud(){
+  const msg=document.getElementById('incidentDesc').value.toLowerCase();
+  let result="";
+  if(msg.includes("otp")||msg.includes("bank")||msg.includes("click link")||msg.includes("lottery")||msg.includes("urgent")){
+    result="⚠️ Possible Fraud detected! Do not respond to this message.";
+  } else {
+    result="✅ No fraud indicators found.";
+  }
+  document.getElementById('fraudResult').innerText=result;
+}
+
+// Submit Report
+function submitReport(){
+  alert("Report Submitted (Offline Mode)");
+  document.getElementById('incidentDesc').value='';
+  document.getElementById('fraudResult').innerText='';
+}
+
+// Profile Save
+function saveProfile(){
+  const contact=document.getElementById('profileContact').value;
+  alert("Profile Updated: "+contact);
+}
+
+// Chatbot
+function toggleChatbot(){
+  const chat=document.getElementById('chatbot');
+  chat.style.display=chat.style.display==='flex'?'none':'flex';
+}
+function sendMessage(){
+  const msg=document.getElementById('chatInput').value;
+  if(!msg)return;
+  const chat=document.getElementById('chatMessages');
+  chat.innerHTML+=`<div class='my-1 text-right text-white bg-blue-500 p-2 rounded'>${msg}</div>`;
+  document.getElementById('chatInput').value='';
+  setTimeout(()=>{
+    chat.innerHTML+=`<div class='my-1 text-left bg-gray-200 p-2 rounded'>AI Suggestion: Please stay alert for unknown messages.</div>`;
+    chat.scrollTop=chat.scrollHeight;
+  },500);
+}
+</script>
+</body>
+</html>
